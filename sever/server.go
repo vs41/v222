@@ -544,7 +544,34 @@ func WebsocketHandler(c *websocket.Conn) {
 
 	tsWriter := &threadSafeWriter{Conn: c}
 
-	pc, err := webrtc.NewPeerConnection(webrtc.Configuration{})
+	settingEngine := webrtc.SettingEngine{}
+	// Optional: force TURN in production if UDP blocked
+	settingEngine.SetICETransportPolicy(webrtc.ICETransportPolicyAll)
+
+	api := webrtc.NewAPI(webrtc.WithSettingEngine(settingEngine))
+
+	config := webrtc.Configuration{
+		ICEServers: []webrtc.ICEServer{
+			// STUN for local testing
+			{
+				URLs: []string{
+					"stun:stun.l.google.com:19302",
+					"stun:stun1.l.google.com:19302",
+				},
+			},
+			// TURN for production/cloud
+			{
+				URLs: []string{
+					"turn:global.relay.metered.ca:80?transport=tcp",
+					"turns:global.relay.metered.ca:443",
+				},
+				Username:   "fd09f21aad0c834cb5c69447",
+				Credential: "VsUmB01i5+KwCDPN",
+			},
+		},
+	}
+
+	pc, err := api.NewPeerConnection(config)
 	if err != nil {
 		log.Errorf("Failed to create PeerConnection: %v", err)
 		return
