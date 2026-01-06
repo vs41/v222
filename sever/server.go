@@ -591,16 +591,27 @@ func WebsocketHandler(c *websocket.Conn) {
 	gameConnections[gameID][teamID] = append(gameConnections[gameID][teamID], peerConnectionState{pc, tsWriter, unitID, teamID, radioRange, username})
 	listLock.Unlock()
 
-	pc.OnICECandidate(func(i *webrtc.ICECandidate) {
+		pc.OnICECandidate(func(i *webrtc.ICECandidate) {
 		if i == nil {
+			log.Infof("ICE gathering complete for %s", username)
 			return
 		}
+		
+		// Log what type of candidate we got
+		log.Infof("ICE Candidate for %s: Type=%s, Protocol=%s, Address=%s:%d",
+			username,
+			i.Typ.String(),
+			i.Protocol.String(), 
+			i.Address,
+			i.Port,
+		)
+		
 		candidateJSON, err := json.Marshal(i.ToJSON())
 		if err == nil {
 			tsWriter.WriteJSON(&websocketMessage{
 				Event: "candidate",
 				Data:  string(candidateJSON),
-				User:  username, // 🔹 send username with ICE candidate too
+				User:  username,
 			})
 		}
 	})
@@ -668,19 +679,26 @@ pc.OnICEGatheringStateChange(func(state webrtc.ICEGathererState) {
 		}
 
 		switch message.Event {
-		case "candidate":
-			cand := webrtc.ICECandidateInit{}
-			if err := json.Unmarshal([]byte(message.Data), &cand); err == nil {
-				pc.AddICECandidate(cand)
-			}
-		case "answer":
-			answer := webrtc.SessionDescription{}
-			if err := json.Unmarshal([]byte(message.Data), &answer); err == nil {
-				pc.SetRemoteDescription(answer)
-			}
-		default:
-			log.Errorf("Unknown message: %+v", message)
-		}
+				case "candidate":
+					cand := webrtc.ICECandidateInit{}
+					if err := json.Unmarshal([]byte(message.Data), &cand); err == nil {
+						pc.AddICECandidate(cand)
+					}
+					
+				case "answer":
+					answer := webrtc.SessionDescription{}
+					if err := json.Unmarshal([]byte(message.Data), &answer); err == nil {
+						pc.SetRemoteDescription(answer)
+					}
+					
+				// 🔹 ADD THIS NEW CASE
+				case "pong":
+					// Client responded to ping - connection is alive
+					log.Debugf("Received pong from %s", username)
+					
+				default:
+					log.Errorf("Unknown message: %+v", message)
+				}
 	}
 }
 
