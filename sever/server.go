@@ -544,22 +544,16 @@ func WebsocketHandler(c *websocket.Conn) {
 
 	tsWriter := &threadSafeWriter{Conn: c}
 
-	settingEngine := webrtc.SettingEngine{}
-	// Optional: force TURN in production if UDP blocked
-	settingEngine.SetICETransportPolicy(webrtc.ICETransportPolicyAll)
-
-	api := webrtc.NewAPI(webrtc.WithSettingEngine(settingEngine))
-
 	config := webrtc.Configuration{
 		ICEServers: []webrtc.ICEServer{
-			// STUN for local testing
+			// STUN for local
 			{
 				URLs: []string{
 					"stun:stun.l.google.com:19302",
 					"stun:stun1.l.google.com:19302",
 				},
 			},
-			// TURN for production/cloud
+			// TURN for cloud / Render
 			{
 				URLs: []string{
 					"turn:global.relay.metered.ca:80?transport=tcp",
