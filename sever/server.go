@@ -565,7 +565,7 @@ func WebsocketHandler(c *websocket.Conn) {
 		},
 	}
 
-	pc, err := api.NewPeerConnection(config)
+	pc, err := webrtc.NewPeerConnection(config)
 	if err != nil {
 		log.Errorf("Failed to create PeerConnection: %v", err)
 		return
