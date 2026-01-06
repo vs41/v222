@@ -605,15 +605,28 @@ func WebsocketHandler(c *websocket.Conn) {
 		}
 	})
 
-	pc.OnConnectionStateChange(func(s webrtc.PeerConnectionState) {
-		log.Infof("Connection state: %s", s)
-		switch s {
-		case webrtc.PeerConnectionStateFailed:
-			pc.Close()
-		case webrtc.PeerConnectionStateClosed:
-			signalPeerConnectionsForGameTeam(gameID, teamID, username)
+	pc.OnICEConnectionStateChange(func(state webrtc.ICEConnectionState) {
+		log.Infof("ICE Connection State: %s for user %s", state.String(), username)
+		
+		switch state {
+		case webrtc.ICEConnectionStateFailed:
+			log.Errorf("ICE connection failed for %s", username)
+			tsWriter.WriteJSON(&websocketMessage{
+				Event: "ice_failed",
+				Data:  "ICE connection failed - check network/TURN server",
+				User:  username,
+			})
+		case webrtc.ICEConnectionStateDisconnected:
+			log.Warnf("ICE disconnected for %s", username)
+		case webrtc.ICEConnectionStateConnected:
+			log.Infof("ICE connected successfully for %s", username)
 		}
 	})
+
+// Add ICE gathering state monitoring
+pc.OnICEGatheringStateChange(func(state webrtc.ICEGathererState) {
+	log.Infof("ICE Gathering State: %s for user %s", state.String(), username)
+})
 
 	pc.OnTrack(func(t *webrtc.TrackRemote, _ *webrtc.RTPReceiver) {
 		log.Infof("Got remote track from user %s: Kind=%s, ID=%s", username, t.Kind(), t.ID())
