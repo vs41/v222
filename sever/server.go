@@ -584,7 +584,7 @@ func WebsocketHandler(c *websocket.Conn) {
 
 		mapUnitIdGameId[gameID] = make(map[string]bool)
 	}
-	mapUnitIdGameId[gameID][username] = false
+	mapUnitIdGameId[gameID][unitID] = false
 	if _, ok := gameConnections[gameID]; !ok {
 		gameConnections[gameID] = map[string][]peerConnectionState{}
 	}
