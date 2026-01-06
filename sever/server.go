@@ -635,9 +635,6 @@ func WebsocketHandler(c *websocket.Conn) {
 	})
 
 // Add ICE gathering state monitoring
-pc.OnICEGatheringStateChange(func(state webrtc.ICEGathererState) {
-	log.Infof("ICE Gathering State: %s for user %s", state.String(), username)
-})
 
 	pc.OnTrack(func(t *webrtc.TrackRemote, _ *webrtc.RTPReceiver) {
 		log.Infof("Got remote track from user %s: Kind=%s, ID=%s", username, t.Kind(), t.ID())
