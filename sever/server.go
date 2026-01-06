@@ -547,12 +547,6 @@ func WebsocketHandler(c *websocket.Conn) {
 	config := webrtc.Configuration{
 		ICEServers: []webrtc.ICEServer{
 			// STUN for local
-			{
-				URLs: []string{
-					"stun:stun.l.google.com:19302",
-					"stun:stun1.l.google.com:19302",
-				},
-			},
 			// TURN for cloud / Render
 			{
 				URLs: []string{
@@ -562,6 +556,13 @@ func WebsocketHandler(c *websocket.Conn) {
 				Username:   "fd09f21aad0c834cb5c69447",
 				Credential: "VsUmB01i5+KwCDPN",
 			},
+			{
+				URLs: []string{
+					"stun:stun.l.google.com:19302",
+					"stun:stun1.l.google.com:19302",
+				},
+			},
+			
 		},
 	}
 
